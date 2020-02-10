@@ -20,12 +20,9 @@ impl Metric {
     where
         P: AsRef<Path>,
     {
-        let file_name = format!("{}.csv", name);
-        let path = storage_path.as_ref().join(file_name);
-
         Metric {
             name: name.into(),
-            path,
+            path: metric_path(name, storage_path),
         }
     }
 
@@ -43,4 +40,13 @@ impl Metric {
             .write_fmt(format_args!("{};{}\n", now.timestamp(), speed))
             .map_err(|error| MetricError::write_error(&self.name, &self.path, error))
     }
+}
+
+pub fn metric_path<P>(name: &str, storage_path: P) -> PathBuf
+where
+    P: AsRef<Path>,
+{
+    let file_name = format!("{}.csv", name);
+
+    storage_path.as_ref().join(file_name)
 }
