@@ -29,17 +29,22 @@ fn main() -> ApplicationResult {
                 warmup_size,
                 measure_size,
                 path,
-            } => {
-                worker::start_file_worker(*interval, *warmup_size, *measure_size, path, metric)
-                    .map_err(ApplicationError::worker_error)?;
-            }
+            } => worker::start_file_worker(*interval, *warmup_size, *measure_size, path, metric)
+                .map_err(ApplicationError::worker_error)?,
             MerticSettings::Tcp {
                 interval,
                 warmup_size,
                 measure_size,
                 address,
                 port,
-            } => unimplemented!(),
+            } => worker::start_tcp_worker(
+                *interval,
+                *warmup_size,
+                *measure_size,
+                (address.as_str(), *port),
+                metric,
+            )
+            .map_err(ApplicationError::worker_error)?,
             MerticSettings::Http {
                 interval,
                 warmup_size,

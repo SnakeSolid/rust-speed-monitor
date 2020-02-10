@@ -47,7 +47,7 @@ impl HttpWorker {
         loop {
             match self.measure() {
                 Ok(()) => {}
-                Err(err) => error!("HTTP measurement error: path = {} - {}", self.url, err),
+                Err(err) => error!("HTTP measurement error: url = {} - {}", self.url, err),
             }
 
             thread::sleep(self.interval);

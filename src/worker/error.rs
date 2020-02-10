@@ -13,6 +13,8 @@ pub enum WorkerError {
     IoError { error: IoError },
     ReqwestError { error: ReqwestError },
     MetricError { error: MetricError },
+    SocketAddressError { error: IoError },
+    EmptySocketAddress {},
 }
 
 impl WorkerError {
@@ -33,6 +35,17 @@ impl WorkerError {
 
         WorkerError::MetricError { error }
     }
+
+    pub fn socket_address_error(error: IoError) -> Self {
+        warn!("Socket address error - {}", error);
+
+        WorkerError::SocketAddressError { error }
+    }
+    pub fn empty_socket_address() -> Self {
+        warn!("Empty socket address");
+
+        WorkerError::EmptySocketAddress {}
+    }
 }
 
 impl Error for WorkerError {}
@@ -43,6 +56,8 @@ impl Display for WorkerError {
             WorkerError::IoError { error } => write!(f, "{}", error),
             WorkerError::ReqwestError { error } => write!(f, "{}", error),
             WorkerError::MetricError { error } => write!(f, "{}", error),
+            WorkerError::SocketAddressError { error } => write!(f, "{}", error),
+            WorkerError::EmptySocketAddress {} => write!(f, "Empty socket address"),
         }
     }
 }
