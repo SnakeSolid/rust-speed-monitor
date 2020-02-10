@@ -1,4 +1,5 @@
 use crate::metric::MetricError;
+use reqwest::Error as ReqwestError;
 use std::error::Error;
 use std::fmt::Display;
 use std::fmt::Formatter;
@@ -10,6 +11,7 @@ pub type WorkerResult<T> = Result<T, WorkerError>;
 #[derive(Debug)]
 pub enum WorkerError {
     IoError { error: IoError },
+    ReqwestError { error: ReqwestError },
     MetricError { error: MetricError },
 }
 
@@ -18,6 +20,12 @@ impl WorkerError {
         warn!("IO error - {}", error);
 
         WorkerError::IoError { error }
+    }
+
+    pub fn http_error(error: ReqwestError) -> Self {
+        warn!("HTTP error - {}", error);
+
+        WorkerError::ReqwestError { error }
     }
 
     pub fn metric_error(error: MetricError) -> Self {
@@ -33,6 +41,7 @@ impl Display for WorkerError {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         match self {
             WorkerError::IoError { error } => write!(f, "{}", error),
+            WorkerError::ReqwestError { error } => write!(f, "{}", error),
             WorkerError::MetricError { error } => write!(f, "{}", error),
         }
     }

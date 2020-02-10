@@ -16,13 +16,16 @@ pub struct Metric {
 }
 
 impl Metric {
-    pub fn new<P>(name: &str, path: P) -> Metric
+    pub fn new<P>(name: &str, storage_path: P) -> Metric
     where
         P: AsRef<Path>,
     {
+        let file_name = format!("{}.csv", name);
+        let path = storage_path.as_ref().join(file_name);
+
         Metric {
             name: name.into(),
-            path: path.as_ref().into(),
+            path,
         }
     }
 

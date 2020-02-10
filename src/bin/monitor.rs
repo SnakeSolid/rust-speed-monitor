@@ -21,7 +21,7 @@ fn main() -> ApplicationResult {
     for (name, settings) in config.metrics() {
         info!("Starting reader for {}", name);
 
-        let metric = Metric::new(name, &config.storage_root().join(name));
+        let metric = Metric::new(name, config.storage_root());
 
         match settings {
             MerticSettings::File {
@@ -39,13 +39,14 @@ fn main() -> ApplicationResult {
                 measure_size,
                 address,
                 port,
-            } => {}
+            } => unimplemented!(),
             MerticSettings::Http {
                 interval,
                 warmup_size,
                 measure_size,
                 url,
-            } => {}
+            } => worker::start_http_worker(*interval, *warmup_size, *measure_size, url, metric)
+                .map_err(ApplicationError::worker_error)?,
         }
     }
 
