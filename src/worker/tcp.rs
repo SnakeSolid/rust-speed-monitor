@@ -1,19 +1,18 @@
 use crate::metric::Metric;
 use crate::worker::error::WorkerError;
 use crate::worker::error::WorkerResult;
-use std::io::Read;
+use crate::worker::speed::Speedometer;
+use std::net::Shutdown;
 use std::net::SocketAddr;
 use std::net::TcpStream;
 use std::net::ToSocketAddrs;
 use std::thread;
 use std::time::Duration;
-use std::time::Instant;
 
 #[derive(Debug)]
 pub struct TcpWorker {
     interval: Duration,
-    warmup_size: u64,
-    measure_size: u64,
+    speedometer: Speedometer,
     address: SocketAddr,
     metric: Metric,
 }
@@ -21,8 +20,7 @@ pub struct TcpWorker {
 impl TcpWorker {
     pub fn new<A>(
         interval: u64,
-        warmup_size: u64,
-        measure_size: u64,
+        speedometer: Speedometer,
         address: A,
         metric: Metric,
     ) -> WorkerResult<TcpWorker>
@@ -37,8 +35,7 @@ impl TcpWorker {
 
         Ok(TcpWorker {
             interval: Duration::from_secs(interval),
-            warmup_size,
-            measure_size,
+            speedometer,
             address,
             metric,
         })
@@ -59,37 +56,17 @@ impl TcpWorker {
     }
 
     fn measure(&self) -> WorkerResult<()> {
-        let mut buffer = [0; 8192];
-        let mut read = TcpStream::connect(&self.address).map_err(WorkerError::io_error)?;
+        let mut stream = TcpStream::connect(&self.address).map_err(WorkerError::io_error)?;
 
-        self.read_bytes(&mut read, &mut buffer, self.warmup_size)?;
+        stream
+            .shutdown(Shutdown::Write)
+            .map_err(WorkerError::io_error)?;
 
-        let now = Instant::now();
-
-        self.read_bytes(&mut read, &mut buffer, self.measure_size)?;
-
-        let duration = 1.0e-9 * now.elapsed().as_nanos() as f64;
-        let speed = self.measure_size as f64 / duration;
+        let speed = self
+            .speedometer
+            .measure(&mut stream)
+            .map_err(WorkerError::io_error)?;
 
         self.metric.write(speed).map_err(WorkerError::metric_error)
-    }
-
-    fn read_bytes(&self, read: &mut dyn Read, buffer: &mut [u8], size: u64) -> WorkerResult<()> {
-        let mut bytes_remain = size;
-
-        loop {
-            let length = buffer.len().min(bytes_remain as usize);
-
-            match read
-                .read(&mut buffer[0..length])
-                .map_err(WorkerError::io_error)?
-            {
-                n if n > 0 => bytes_remain -= n as u64,
-                0 => break,
-                _ => unreachable!(),
-            }
-        }
-
-        Ok(())
     }
 }

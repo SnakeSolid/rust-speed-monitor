@@ -1,6 +1,7 @@
 mod error;
 mod file;
 mod http;
+mod speed;
 mod tcp;
 
 pub use error::WorkerError;
@@ -10,6 +11,7 @@ use crate::metric::Metric;
 use file::FileWorker;
 use http::HttpWorker;
 use reqwest::IntoUrl;
+use speed::Speedometer;
 use std::net::ToSocketAddrs;
 use std::path::Path;
 use std::thread::Builder;
@@ -25,7 +27,8 @@ pub fn start_file_worker<P>(
 where
     P: AsRef<Path>,
 {
-    let worker = FileWorker::new(interval, warmup_size, measure_size, path, metric);
+    let speedometer = Speedometer::new(warmup_size, measure_size);
+    let worker = FileWorker::new(interval, speedometer, path, metric);
 
     Builder::new()
         .spawn(move || worker.run())
@@ -43,7 +46,8 @@ pub fn start_http_worker<U>(
 where
     U: IntoUrl,
 {
-    let worker = HttpWorker::new(interval, warmup_size, measure_size, url, metric)?;
+    let speedometer = Speedometer::new(warmup_size, measure_size);
+    let worker = HttpWorker::new(interval, speedometer, url, metric)?;
 
     Builder::new()
         .spawn(move || worker.run())
@@ -61,7 +65,8 @@ pub fn start_tcp_worker<A>(
 where
     A: ToSocketAddrs,
 {
-    let worker = TcpWorker::new(interval, warmup_size, measure_size, address, metric)?;
+    let speedometer = Speedometer::new(warmup_size, measure_size);
+    let worker = TcpWorker::new(interval, speedometer, address, metric)?;
 
     Builder::new()
         .spawn(move || worker.run())
