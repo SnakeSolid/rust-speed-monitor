@@ -6,6 +6,7 @@ use iron::middleware::Handler;
 use iron::mime::Mime;
 use iron::mime::SubLevel;
 use iron::mime::TopLevel;
+use iron::status::Status;
 use iron::IronResult;
 use iron::Request as IronRequest;
 use iron::Response as IronResponse;
@@ -43,7 +44,7 @@ impl Handler for DataHandler {
             })?;
             let content_type = Mime(TopLevel::Text, SubLevel::Plain, vec![]);
 
-            Ok(IronResponse::with((content_type, read)))
+            Ok(IronResponse::with((Status::Ok, content_type, read)))
         })
     }
 }
