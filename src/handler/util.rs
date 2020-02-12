@@ -25,22 +25,17 @@ where
     struct_to_response(&response)
 }
 
-pub fn handle_request<Req, Res, F>(request: &mut Request, callback: F) -> IronResult<Response>
+pub fn handle_request<Req, F>(request: &mut Request, callback: F) -> IronResult<Response>
 where
     Req: DeserializeOwned,
-    Res: Serialize,
-    F: FnOnce(Req) -> HandlerResult<Res>,
+    F: FnOnce(Req) -> HandlerResult<Response>,
 {
-    let result = match serde_json::from_reader(request.body.by_ref()) {
+    let response = match serde_json::from_reader(request.body.by_ref()) {
         Ok(request) => callback(request),
         Err(err) => return Ok(Response::with((status::BadRequest, format!("{}", err)))),
     };
-    let response = match result {
-        Ok(response) => ErrorResponse::success(response),
-        Err(err) => ErrorResponse::error(&format!("{}", err)),
-    };
 
-    struct_to_response(&response)
+    Ok(response.unwrap_or_else(|err| Response::with((status::BadRequest, format!("{}", err)))))
 }
 
 fn struct_to_response<Res>(value: &Res) -> IronResult<Response>
