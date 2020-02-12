@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Speed Monitor</title>
+
+    <link rel="icon" type="image/png" href="/static/icon.png" />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.css"
+      integrity="sha256-/Z28yXtfBv/6/alw+yZuODgTbKZm86IKbPE/5kjO/xY="
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.0.0/dygraph.min.css"
+      integrity="sha256-y5AaP/PGcK5D8H3WAWp4LTOE7qCYyphket0A3dCOwmk="
+      crossorigin="anonymous"
+    />
+
+    <script
+      async
+      data-main="/static/js/init.js"
+      src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.min.js"
+      integrity="sha256-0SGl1PJNDyJwcV5T+weg2zpEMrh7xvlwO4oXgvZCeZk="
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <div class="ui grid">
+      <div class="two wide column"></div>
+
+      <div class="twelve wide column">
+        <div class="ui secondary pointing menu"><div class="header item">Speed Monitor</div></div>
+
+        <div class="ui vertical segment">
+          <form class="ui form" data-bind="css: { loading: loading }">
+            <div class="field" data-bind="css: { error: isMetricInvalid }">
+              <label for="database">Database:</label>
+              <select
+                class="ui fluid dropdown"
+                id="database"
+                tabindex="1"
+                data-bind="
+                    options: availableMetrics,
+                    value: selectedMetric,
+                    optionsCaption: 'Choose metric...'"
+              >
+              </select>
+            </div>
+
+            <div class="two ui buttons">
+              <button
+                class="ui primary button"
+                type="submit"
+                tabindex="2"
+                data-bind="disable: isFormInvalid, click: loadData"
+              >
+                Load data
+              </button>
+              <button class="ui button" tabindex="3" data-bind="click: loadMetrics">
+                Update metrics
+              </button>
+            </div>
+          </form>
+
+          <div class="ui error icon message" data-bind="visible: isErrorMessagePresent">
+            <i class="exclamation triangle icon"></i>
+            <div class="content">
+              <div class="header">Error occurred</div>
+              <p data-bind="text: errorMessage"></p>
+            </div>
+          </div>
+
+          <div class="ui segment">
+            <pre data-bind="text: metricData"></pre>
+          </div>
+        </div>
+
+        <div class="two wide column"></div>
+      </div>
+    </div>
+  </body>
+</html>
