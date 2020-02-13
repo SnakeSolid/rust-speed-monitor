@@ -3,7 +3,7 @@
 requirejs.config({
 	baseUrl: "/static/js",
 	paths: {
-		chart: ["https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min"],
+		dygraph: ["https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.1.0/dygraph.min"],
 		knockout: ["https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min"],
 		moment: ["https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.19.1/moment.min"],
 		reqwest: ["https://cdnjs.cloudflare.com/ajax/libs/reqwest/2.0.5/reqwest.min"],
