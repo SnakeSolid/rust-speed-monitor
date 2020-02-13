@@ -1,6 +1,8 @@
 "use strict";
 
 define(["knockout", "reqwest", "moment", "dygraph"], function(ko, reqwest, moment, Dygraph) {
+	const TIME_GAP = 10 * 60 * 1000; // 10 minutes
+
 	const Application = function() {
 		this.availableMetrics = ko.observableArray([]);
 		this.selectedMetric = ko.observable();
@@ -18,6 +20,7 @@ define(["knockout", "reqwest", "moment", "dygraph"], function(ko, reqwest, momen
 			fillGraph: true,
 			labels: ["Time", "Speed"],
 			ylabel: "Download speed (bytes/sec)",
+			legend: "always",
 			axes: {
 				y: {
 					axisLabelWidth: 90,
@@ -75,7 +78,8 @@ define(["knockout", "reqwest", "moment", "dygraph"], function(ko, reqwest, momen
 			}),
 		})
 			.then(response => {
-				const data = response
+				const data = [];
+				const series = response
 					.split("\n")
 					.filter(line => line !== "")
 					.map(line => {
@@ -85,6 +89,19 @@ define(["knockout", "reqwest", "moment", "dygraph"], function(ko, reqwest, momen
 
 						return [date, value];
 					});
+				let lastTime = null;
+
+				// Add empty space if time between adjacent points greater than 10 minutes.
+				for (const row of series) {
+					const rowTime = row[0].getTime();
+
+					if (lastTime !== null && lastTime + TIME_GAP < rowTime) {
+						data.push([new Date(lastTime + TIME_GAP), null]);
+					}
+
+					data.push(row);
+					lastTime = rowTime;
+				}
 
 				this.graph.updateOptions({ file: data });
 				this.loading(false);
