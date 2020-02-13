@@ -56,8 +56,16 @@ impl TcpWorker {
     }
 
     fn measure(&self) -> WorkerResult<()> {
-        let mut stream = TcpStream::connect(&self.address).map_err(WorkerError::io_error)?;
+        let timeout = Duration::from_secs(10);
+        let mut stream =
+            TcpStream::connect_timeout(&self.address, timeout).map_err(WorkerError::io_error)?;
 
+        stream
+            .set_read_timeout(Some(timeout))
+            .map_err(WorkerError::io_error)?;
+        stream
+            .set_write_timeout(Some(timeout))
+            .map_err(WorkerError::io_error)?;
         stream
             .shutdown(Shutdown::Write)
             .map_err(WorkerError::io_error)?;
