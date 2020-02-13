@@ -22,11 +22,11 @@ define(["knockout", "reqwest", "moment", "dygraph"], function(ko, reqwest, momen
 				y: {
 					axisLabelWidth: 90,
 					axisLabelFormatter: function(d, gran) {
-						const sizes = [1024, 1048576, 1073741824, 1099511627776];
+						const sizes = [1, 1024, 1048576, 1073741824, 1099511627776];
 						const names = [" b/s", " Kb/s", " Mb/s", " Gb/s"];
 
-						for (const i in sizes) {
-							if (d < sizes[i]) {
+						for (const i of sizes.keys()) {
+							if (d < sizes[i + 1]) {
 								return (d / sizes[i]).toFixed(1) + names[i];
 							}
 						}
