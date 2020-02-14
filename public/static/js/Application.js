@@ -3,6 +3,31 @@
 define(["knockout", "reqwest", "moment", "dygraph"], function(ko, reqwest, moment, Dygraph) {
 	const TIME_GAP = 10 * 60 * 1000; // 10 minutes
 
+	function speedFormatter(value) {
+		const sizes = [1, 1024, 1048576, 1073741824, 1099511627776];
+		const names = [" b/s", " Kb/s", " Mb/s", " Gb/s"];
+
+		for (const i of sizes.keys()) {
+			if (value < sizes[i + 1]) {
+				return (value / sizes[i]).toFixed(1) + names[i];
+			}
+		}
+
+		return (value / sizes[3]).toFixed(1) + names[3];
+	}
+
+	function legendFormatter(data) {
+		if (data.x == null) {
+			return "";
+		}
+
+		const seriesHTML = data.series
+			.map(series => "<p>" + series.dashHTML + " " + series.labelHTML + ": " + speedFormatter(series.y))
+			.join();
+
+		return "<p>" + data.xHTML + ":" + seriesHTML;
+	}
+
 	const Application = function() {
 		this.availableMetrics = ko.observableArray([]);
 		this.selectedMetric = ko.observable();
@@ -21,21 +46,11 @@ define(["knockout", "reqwest", "moment", "dygraph"], function(ko, reqwest, momen
 			labels: ["Time", "Speed"],
 			ylabel: "Download speed (bytes/sec)",
 			legend: "always",
+			legendFormatter: legendFormatter,
 			axes: {
 				y: {
 					axisLabelWidth: 90,
-					axisLabelFormatter: function(d, gran) {
-						const sizes = [1, 1024, 1048576, 1073741824, 1099511627776];
-						const names = [" b/s", " Kb/s", " Mb/s", " Gb/s"];
-
-						for (const i of sizes.keys()) {
-							if (d < sizes[i + 1]) {
-								return (d / sizes[i]).toFixed(1) + names[i];
-							}
-						}
-
-						return (d / sizes[3]).toFixed(1) + names[3];
-					},
+					axisLabelFormatter: (d, gran) => speedFormatter(d),
 				},
 			},
 			width: element.clientWidth,
@@ -78,7 +93,6 @@ define(["knockout", "reqwest", "moment", "dygraph"], function(ko, reqwest, momen
 			}),
 		})
 			.then(response => {
-				const data = [];
 				const series = response
 					.split("\n")
 					.filter(line => line !== "")
@@ -89,6 +103,7 @@ define(["knockout", "reqwest", "moment", "dygraph"], function(ko, reqwest, momen
 
 						return [date, value];
 					});
+				const data = [];
 				let lastTime = null;
 
 				// Add empty space if time between adjacent points greater than 10 minutes.
